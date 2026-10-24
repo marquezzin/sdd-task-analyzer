@@ -1,5 +1,7 @@
 # sdd-task-analyzer
 
+[![CI](https://github.com/marquezzin/sdd-task-analyzer/actions/workflows/ci.yml/badge.svg)](https://github.com/marquezzin/sdd-task-analyzer/actions/workflows/ci.yml)
+
 Módulo de análise de tarefas e produtividade, desenvolvido com **Spec-Driven Development (SDD)**
 e geração de código assistida por IA. Projeto cumulativo da disciplina Bootcamp III (CEUB EAD).
 
@@ -11,6 +13,7 @@ e geração de código assistida por IA. Projeto cumulativo da disciplina Bootca
 
 ```
 sdd-task-analyzer/
+├── .github/workflows/ci.yml
 ├── README.md
 ├── CONTEXT_RULES.md
 ├── .gitignore
@@ -31,6 +34,15 @@ pip install -r requirements.txt
 python -m pytest tests/ -v
 ```
 
+## Integração contínua (CI/CD)
+
+O pipeline em [`.github/workflows/ci.yml`](.github/workflows/ci.yml) roda a cada push ou pull request
+nas branches `main` e `develop`:
+
+1. ambiente `ubuntu-latest` com Python 3.11 (versão mínima do `CONTEXT_RULES.md`);
+2. instalação das dependências autorizadas via `requirements.txt`;
+3. execução de `pytest tests/test_harness.py -v`. Qualquer teste falhando derruba o build.
+
 ## Uso
 
 ```python
@@ -48,4 +60,5 @@ print(analisar_tarefas(tarefas))
 
 ## Status do build
 
-Harness `pytest`: ver seção de testes do relatório técnico da Fase 2 (100% aprovado).
+O badge no topo reflete a última execução do pipeline na branch `main`. Histórico completo na aba
+[Actions](https://github.com/marquezzin/sdd-task-analyzer/actions).
