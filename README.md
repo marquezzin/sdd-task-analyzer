@@ -18,6 +18,7 @@ sdd-task-analyzer/
 ├── .github/workflows/ci.yml        # pipeline de integração contínua (GitHub Actions)
 ├── Dockerfile                      # imagem python:3.11-slim com pytest como comando de entrada
 ├── docker-compose.yml              # serviço `tests`: a suíte inteira com um único comando
+├── .dockerignore                   # o que fica fora da imagem (git, docs, caches, venvs)
 ├── CONTEXT_RULES.md                # regras de governança de IA (Fase 1)
 ├── README.md
 ├── .gitignore
@@ -101,7 +102,7 @@ O que o contrato barrou, como a homologação foi feita e a rastreabilidade dos 
 |---|---|---|
 | 1 | Especificação SDD, cenários de aceite e CONTEXT_RULES | `specs/system_design_document.pdf` |
 | 2 | Código via IA, test harness e PRs | publicado originalmente em [giovanniacg/sdd-task-analyzer](https://github.com/giovanniacg/sdd-task-analyzer) (PRs #1 e #2); histórico migrado para este repositório |
-| 3 | CI/CD, Docker, relatório de governança e pitch técnico | PRs #1 a #3 deste repositório |
+| 3 | CI/CD, Docker, relatório de governança e pitch técnico | PRs #1 a #4 deste repositório |
 
 ## Status do build
 

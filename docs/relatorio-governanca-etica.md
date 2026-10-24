@@ -16,13 +16,14 @@ O TaskAnalyzer é um módulo Python de métricas de produtividade (tempo médio 
 | 2 | Código gerado por IA, test harness (19 testes) e versionamento com PRs | `src/task_analyzer.py`, `tests/test_harness.py`; publicado originalmente em [giovanniacg/sdd-task-analyzer](https://github.com/giovanniacg/sdd-task-analyzer) |
 | 3 | CI/CD, containerização, este relatório e o pitch técnico | `.github/workflows/ci.yml`, `Dockerfile`, `docker-compose.yml`, `docs/`, `specs/requirements.yaml` |
 
-Para a Fase 3 o histórico completo de commits da Fase 2 foi migrado para a conta do autor (`marquezzin/sdd-task-analyzer`), preservando os commits originais (autoria, mensagens e merges) e as branches de funcionalidade. Pull requests não migram com o histórico git: os da Fase 2 continuam no repositório original ([PR #1, test harness](https://github.com/giovanniacg/sdd-task-analyzer/pull/1) e [PR #2, implementação](https://github.com/giovanniacg/sdd-task-analyzer/pull/2)). Os PRs #1 a #3 citados daqui em diante são do repositório `marquezzin`, um por branch de funcionalidade, cada um com checklist de homologação:
+Para a Fase 3 o histórico completo de commits da Fase 2 foi migrado para a conta do autor (`marquezzin/sdd-task-analyzer`), preservando os commits originais (autoria, mensagens e merges) e as branches de funcionalidade. Pull requests não migram com o histórico git: os da Fase 2 continuam no repositório original ([PR #1, test harness](https://github.com/giovanniacg/sdd-task-analyzer/pull/1) e [PR #2, implementação](https://github.com/giovanniacg/sdd-task-analyzer/pull/2)). Os PRs #1 a #4 citados daqui em diante são do repositório `marquezzin`, um por branch de funcionalidade, cada um com checklist de homologação:
 
 | PR | Branch | Conteúdo |
 |---|---|---|
 | #1 | `feature/ci-cd` | pipeline GitHub Actions e badge no README |
 | #2 | `feature/docker` | Dockerfile, docker-compose.yml, job `docker` no CI |
 | #3 | `feature/governance-docs` | SDD em PDF, `requirements.yaml`, este relatório, registro de prompts |
+| #4 | `feature/ci-actions-node24` | atualização de `actions/checkout` e `actions/setup-python` para versões com Node.js 24, após avisos de descontinuação no primeiro run da `main` |
 
 Assistentes de IA: na Fase 2, Claude (Anthropic) via assistente de código (modelo Claude Sonnet 5.5, conforme a linha `Co-Authored-By` dos commits); na Fase 3, Claude Code (Anthropic) com o modelo Claude Fable 5.1. Em ambas, o contexto fornecido antes de qualquer geração foi `CONTEXT_RULES.md` + `specs/task_analyzer_spec.md`, e cada saída passou por revisão humana antes de entrar no repositório.
 
@@ -33,7 +34,7 @@ Arquivo: `.github/workflows/ci.yml`.
 - **Gatilhos:** `push` e `pull_request` nas branches `main` e `develop`.
 - **Ambiente:** `ubuntu-latest` com Python **3.11**, a versão mínima exigida pelo CONTEXT_RULES 1.1. A máquina de desenvolvimento roda Python 3.14; o pipeline fixa 3.11 de propósito, porque o que precisa ficar provado é o mínimo do contrato, independente da máquina do autor.
 - **Preparação:** atualiza o `pip` e instala só o `requirements.txt`, que contém apenas `pytest`. Nenhuma ferramenta extra (linter, cobertura) entrou no pipeline: a restrição de dependências do CONTEXT_RULES 2.1 vale para o módulo, e o autor decidiu estendê-la ao CI.
-- **Execução:** `pytest tests/test_harness.py -v`. Qualquer teste falhando derruba o build e marca o PR como reprovado.
+- **Execução:** `pytest tests/test_harness.py -v`. Qualquer teste falhando derruba o build e bloqueia o merge: a branch `main` tem proteção que exige os checks `test` e `docker` aprovados.
 - **Segundo job (`docker`):** depende do primeiro, constrói a imagem com `docker compose build` e executa a suíte dentro do container com `docker compose run --rm tests`. O pipeline valida o código e o empacotamento.
 - **Permissões:** o workflow declara `permissions: contents: read`, o mínimo necessário para fazer checkout.
 
@@ -121,7 +122,7 @@ O fluxo adotado nas Fases 2 e 3 segue quatro etapas, nessa ordem:
 1. **Geração.** A IA recebe `CONTEXT_RULES.md` + spec e, antes de gerar código, reformula o que vai fazer (CONTEXT_RULES 3.2). Só depois produz o artefato.
 2. **Leitura crítica e barreira SDD.** O autor lê a saída antes de rodar o harness (CONTEXT_RULES 3.4); em seguida o harness roda. Na Fase 2 ele foi escrito antes da implementação e falhou de propósito (`ModuleNotFoundError`) até o módulo existir. Na Fase 3 a barreira ganhou duas camadas: o pipeline de CI em Python 3.11 e a suíte dentro do container.
 3. **Homologação.** Com 100% do harness verde (spec 2.2), o autor confere o diff contra um checklist derivado das CONTEXT_RULES e registra o resultado no PR. O humano atua como filtro primário e homologador crítico.
-4. **Integração.** Merge só via pull request e só depois do CI verde, por disciplina do autor (repositório individual, sem regra de proteção de branch).
+4. **Integração.** Merge só via pull request e só com os dois checks aprovados, exigidos pela proteção da branch `main` (configurada após o primeiro run verde, antes do merge deste relatório).
 
 Checklist aplicado ao código ([PR #2 da Fase 2](https://github.com/giovanniacg/sdd-task-analyzer/pull/2)):
 
@@ -132,7 +133,7 @@ Checklist aplicado ao código ([PR #2 da Fase 2](https://github.com/giovanniacg/
 - [x] Docstrings Google style e `logging` (sem `print`)
 - [x] Funções pequenas e coesas (SRP)
 
-Checklist aplicado à infraestrutura (PRs #1 a #3 desta fase):
+Checklist aplicado à infraestrutura (PRs #1 a #4 desta fase):
 
 - [x] Pipeline atualiza o `pip` e instala só o que está em `requirements.txt`
 - [x] Versão de Python fixada em 3.11 no CI e na imagem (mínimo do contrato)
@@ -178,6 +179,7 @@ A tabela cobre `src/`. O harness, também gerado por IA, fica fora dela e tem li
 - As 14 funções de teste do harness não têm type hints nem docstring (CONTEXT_RULES 1.2 e 1.4); só a fixture e o construtor `_tarefa` são anotados. PEP 8 (1.3) não é verificado automaticamente.
 - Reprodutibilidade parcial: a tag `3.11-slim` não está fixada por digest e `pytest>=8.0` não tem pin. Dois builds em datas diferentes podem diferir em versões de patch. Aceito pelo tamanho do projeto.
 - Revisor único: projeto individual, sem segundo humano na homologação. A revisão adversarial por IA mitiga, não substitui.
+- O primeiro run na `main` registrou dois avisos de descontinuação (as actions `checkout@v4` e `setup-python@v5` miram o Node.js 20, que os runners estão abandonando). Corrigido no PR #4; o print da seção 2 é anterior a essa correção e mostra os avisos.
 - Os casos não especificados pela spec (itens 4 e 5 da tabela) foram decididos pelo autor e documentados; o caminho correto é formalizá-los na própria spec.
 
 ## 5. Conclusão
