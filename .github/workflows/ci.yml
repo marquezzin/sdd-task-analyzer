@@ -37,3 +37,17 @@ jobs:
 
       - name: Executar test harness
         run: pytest tests/test_harness.py -v
+
+  docker:
+    name: Suite no container (python:3.11-slim)
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout do repositorio
+        uses: actions/checkout@v4
+
+      - name: Construir a imagem
+        run: docker compose build
+
+      - name: Executar a suite no container
+        run: docker compose run --rm tests

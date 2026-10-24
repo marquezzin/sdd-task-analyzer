@@ -14,6 +14,8 @@ e geração de código assistida por IA. Projeto cumulativo da disciplina Bootca
 ```
 sdd-task-analyzer/
 ├── .github/workflows/ci.yml
+├── Dockerfile
+├── docker-compose.yml
 ├── README.md
 ├── CONTEXT_RULES.md
 ├── .gitignore
@@ -42,6 +44,24 @@ nas branches `main` e `develop`:
 1. ambiente `ubuntu-latest` com Python 3.11 (versão mínima do `CONTEXT_RULES.md`);
 2. instalação das dependências autorizadas via `requirements.txt`;
 3. execução de `pytest tests/test_harness.py -v`. Qualquer teste falhando derruba o build.
+
+## Execução em container (Docker)
+
+A imagem parte de `python:3.11-slim`, copia o módulo e o harness e define o `pytest` como comando de
+entrada. O `docker-compose.yml` define o serviço `tests`, então a suíte inteira roda com um único comando:
+
+```bash
+docker compose run --rm tests
+```
+
+Equivalente sem Compose:
+
+```bash
+docker build -t sdd-task-analyzer .
+docker run --rm sdd-task-analyzer
+```
+
+O pipeline de CI também constrói a imagem e executa a suíte dentro dela (job `docker`).
 
 ## Uso
 
