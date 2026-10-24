@@ -1,0 +1,170 @@
+# Contrato executavel do TaskAnalyzer em formato legivel por maquina.
+# Transposicao fiel de specs/task_analyzer_spec.md (Fase 1, Bootcamp III CEUB EAD).
+# Em caso de divergencia, o documento em Markdown (e o PDF do SDD) prevalece.
+
+modulo:
+  nome: TaskAnalyzer
+  arquivo: src/task_analyzer.py
+  assinatura_publica: "analisar_tarefas(tarefas: list[dict]) -> dict"
+  python_minimo: "3.11"
+  dependencias_runtime: []          # apenas a biblioteca padrao (CONTEXT_RULES 2.1)
+  dependencias_teste: [pytest]      # permitido somente no harness
+  fuso_horario: UTC
+  casas_decimais: 2
+  efeitos_colaterais: nenhum        # nao persiste em arquivo nem banco (regra 8)
+
+entradas:
+  tipo: list[dict]
+  campos:
+    - nome: id_tarefa
+      tipo: int
+      obrigatorio: true
+      restricoes: "inteiro > 0, sem repeticao na lista"
+    - nome: titulo
+      tipo: str
+      obrigatorio: true
+      restricoes: "texto nao vazio"
+    - nome: prioridade
+      tipo: str
+      obrigatorio: true
+      valores_aceitos: [baixa, media, alta]
+    - nome: status
+      tipo: str
+      obrigatorio: true
+      valores_aceitos: [concluida, pendente, cancelada]
+    - nome: data_criacao
+      tipo: datetime
+      obrigatorio: true
+      restricoes: "UTC"
+    - nome: data_inicio
+      tipo: datetime
+      obrigatorio: condicional
+      restricoes: "UTC; obrigatoria quando status = concluida"
+    - nome: data_conclusao
+      tipo: datetime
+      obrigatorio: condicional
+      restricoes: "UTC; obrigatoria quando status = concluida"
+    - nome: prazo
+      tipo: datetime
+      obrigatorio: true
+      restricoes: "UTC"
+
+saidas:
+  tipo: dict
+  campos:
+    - nome: tempo_medio_conclusao_min
+      tipo: float
+      descricao: "tempo medio de conclusao em minutos, tarefas concluidas (geral)"
+    - nome: taxa_atraso_percentual
+      tipo: float
+      descricao: "percentual de concluidas apos o prazo, sobre o total de concluidas (geral)"
+    - nome: quantidade_tarefas
+      tipo: int
+      descricao: "total de tarefas concluidas consideradas"
+    - nome: indicadores_por_prioridade
+      tipo: dict
+      chaves: [baixa, media, alta]
+      descricao: "por grupo: tempo_medio_conclusao_min, taxa_atraso_percentual, quantidade_tarefas"
+
+regras_de_negocio:
+  - id: 1
+    texto: "Somente tarefas com status concluida entram no tempo medio e na taxa de atraso."
+  - id: 2
+    texto: "Tempo de conclusao = data_conclusao - data_inicio, em minutos."
+  - id: 3
+    texto: "Tarefa em atraso = concluida com data_conclusao posterior ao prazo."
+  - id: 4
+    texto: "Datas inconsistentes (conclusao antes do inicio, ou concluida sem data_inicio/data_conclusao) disparam TarefaInvalidaError com o id da tarefa e o problema."
+    decisao: "falhar explicitamente em vez de descartar a tarefa em silencio"
+  - id: 5
+    texto: "Sem nenhuma tarefa concluida valida (denominador zero) dispara MetricasIndisponiveisError."
+  - id: 6
+    texto: "Todas as datas em UTC."
+  - id: 7
+    texto: "Tempos e percentuais arredondados com 2 casas decimais."
+  - id: 8
+    texto: "Sem efeitos colaterais: recebe a lista, calcula e retorna."
+  - id: 9
+    texto: "Nenhum comportamento fora do contrato; duvidas voltam para o arquiteto da especificacao."
+
+excecoes:
+  - nome: TarefaInvalidaError
+    base: ValueError
+    quando:
+      - "data_conclusao anterior a data_inicio"
+      - "status concluida sem data_inicio ou data_conclusao"
+      - "campo obrigatorio ausente"
+      - "prioridade ou status fora dos valores aceitos"
+      - "titulo vazio"
+      - "id_tarefa nao inteiro, nao positivo ou repetido"
+    mensagem: "clara, com o id da tarefa e o problema"
+  - nome: MetricasIndisponiveisError
+    base: ValueError
+    quando:
+      - "lista vazia"
+      - "nenhuma tarefa com status concluida"
+    mensagem: "clara e objetiva ao usuario"
+
+cenarios_de_aceite:
+  - id: 1
+    nome: "Sucesso (metricas corretas)"
+    dado: "conjunto de tarefas validas, prioridades, prazos e status variados"
+    quando: "o analisador e executado"
+    entao: "tempo medio, taxa de atraso e quantidade corretos, geral e por prioridade"
+    exemplo_referencia:
+      entrada:
+        - {prioridade: alta, minutos: 60, atrasada: false}
+        - {prioridade: alta, minutos: 120, atrasada: false}
+        - {prioridade: media, minutos: 30, atrasada: true}
+        - {prioridade: baixa, minutos: 90, atrasada: false}
+        - {prioridade: alta, status: pendente}
+      saida_esperada:
+        tempo_medio_conclusao_min: 75.0
+        taxa_atraso_percentual: 25.0
+        quantidade_tarefas: 4
+        indicadores_por_prioridade:
+          alta: {tempo_medio_conclusao_min: 90.0, taxa_atraso_percentual: 0.0, quantidade_tarefas: 2}
+          media: {tempo_medio_conclusao_min: 30.0, taxa_atraso_percentual: 100.0, quantidade_tarefas: 1}
+          baixa: {tempo_medio_conclusao_min: 90.0, taxa_atraso_percentual: 0.0, quantidade_tarefas: 1}
+  - id: 2
+    nome: "Excecao / erro (entradas invalidas)"
+    dado: "datas invalidas (conclusao antes do inicio) ou ausencia de tarefas concluidas"
+    quando: "o analisador e executado"
+    entao: "TarefaInvalidaError ou MetricasIndisponiveisError, sem metricas parciais"
+
+mapeamento_testes:
+  arquivo: tests/test_harness.py
+  comando: "pytest tests/test_harness.py -v"
+  casos:
+    - {cenario: 1, teste: test_metricas_gerais_com_tarefas_validas}
+    - {cenario: 1, teste: test_indicadores_por_prioridade}
+    - {cenario: 1, teste: test_ignora_tarefas_nao_concluidas}
+    - {cenario: 1, teste: test_arredonda_com_duas_casas_decimais}
+    - {cenario: 1, teste: test_prioridade_sem_tarefas_concluidas_retorna_zeros}
+    - {cenario: 1, teste: test_nao_altera_a_lista_de_entrada}
+    - {cenario: 2, teste: test_excecao_data_conclusao_antes_do_inicio}
+    - {cenario: 2, teste: test_excecao_concluida_sem_datas_de_execucao}
+    - {cenario: 2, teste: test_excecao_sem_tarefas_concluidas}
+    - {cenario: 2, teste: test_excecao_lista_vazia}
+    - {cenario: contrato_de_entrada, teste: test_excecao_valor_fora_do_contrato}
+    - {cenario: contrato_de_entrada, teste: test_excecao_campo_obrigatorio_ausente}
+    - {cenario: contrato_de_entrada, teste: test_excecao_id_repetido}
+    - {cenario: contrato_de_entrada, teste: test_excecao_id_invalido}
+
+decisoes_documentadas_na_fase_2:
+  - "Prioridade sem nenhuma tarefa concluida retorna 0.0, 0.0 e 0 (a spec nao define o caso)."
+  - "Valores fora do contrato de entrada disparam TarefaInvalidaError (leitura conservadora da tabela de entradas)."
+  - "Lista vazia ou so pendentes/canceladas dispara MetricasIndisponiveisError (regra 5), ainda que o enunciado da Fase 2 fale em retornar 0.0: a spec da Fase 1 e a fonte da verdade."
+  - "Nomes seguem a spec (analisar_tarefas, TarefaInvalidaError, minutos), nao os nomes genericos do enunciado (analyze_tasks, TaskValidationError, horas): a spec proibe mudar a assinatura."
+
+infraestrutura_fase_3:
+  ci:
+    arquivo: .github/workflows/ci.yml
+    gatilhos: {push: [main, develop], pull_request: [main, develop]}
+    ambiente: "ubuntu-latest, Python 3.11"
+    jobs: [test, docker]
+  container:
+    dockerfile: Dockerfile
+    base: python:3.11-slim
+    compose: docker-compose.yml
+    comando_unico: "docker compose run --rm tests"

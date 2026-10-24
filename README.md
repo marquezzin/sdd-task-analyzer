@@ -8,21 +8,30 @@ e geração de código assistida por IA. Projeto cumulativo da disciplina Bootca
 - **Autor:** Gabriel Marques da Rocha
 - **Contrato de negócio:** [`specs/task_analyzer_spec.md`](specs/task_analyzer_spec.md)
 - **Governança de IA:** [`CONTEXT_RULES.md`](CONTEXT_RULES.md)
+- **Relatório de Governança e Ética (Fase 3):** [`docs/relatorio-governanca-etica.md`](docs/relatorio-governanca-etica.md)
+- **Registro de prompts e homologação:** [`docs/prompts-log.md`](docs/prompts-log.md)
 
 ## Estrutura
 
 ```
 sdd-task-analyzer/
-├── .github/workflows/ci.yml
-├── Dockerfile
-├── docker-compose.yml
+├── .github/workflows/ci.yml        # pipeline de integração contínua (GitHub Actions)
+├── Dockerfile                      # imagem python:3.11-slim com pytest como comando de entrada
+├── docker-compose.yml              # serviço `tests`: a suíte inteira com um único comando
+├── CONTEXT_RULES.md                # regras de governança de IA (Fase 1)
 ├── README.md
-├── CONTEXT_RULES.md
 ├── .gitignore
-├── requirements.txt
-├── specs/task_analyzer_spec.md
-├── tests/test_harness.py
-└── src/task_analyzer.py
+├── requirements.txt                # dependências autorizadas (só pytest)
+├── specs/
+│   ├── system_design_document.pdf  # especificação SDD da Fase 1 (contrato executável)
+│   ├── task_analyzer_spec.md       # a mesma especificação, em Markdown
+│   └── requirements.yaml           # contrato em formato legível por máquina
+├── tests/test_harness.py           # suíte pytest: Cenários 1 e 2 e casos de borda
+├── src/task_analyzer.py            # código gerado via IA e homologado por humano
+└── docs/
+    ├── relatorio-governanca-etica.md   # Pilar 3: alucinações, homologação, ética
+    ├── prompts-log.md                  # rastreabilidade dos prompts (Fases 2 e 3)
+    └── evidencias/                     # prints de CI e container
 ```
 
 ## Como executar
@@ -77,6 +86,22 @@ tarefas = [{
 }]
 print(analisar_tarefas(tarefas))
 ```
+
+## Governança de IA
+
+O código de `src/` foi gerado por assistente de IA sob o contrato de `specs/` e as regras de
+`CONTEXT_RULES.md`, e homologado por revisão humana antes de cada merge (Critical-in-the-Loop).
+O que o contrato barrou, como a homologação foi feita e a rastreabilidade dos prompts estão em
+[`docs/relatorio-governanca-etica.md`](docs/relatorio-governanca-etica.md) e
+[`docs/prompts-log.md`](docs/prompts-log.md).
+
+## Histórico das fases
+
+| Fase | Entrega | Referência |
+|---|---|---|
+| 1 | Especificação SDD, cenários de aceite e CONTEXT_RULES | `specs/system_design_document.pdf` |
+| 2 | Código via IA, test harness e PRs | publicado originalmente em [giovanniacg/sdd-task-analyzer](https://github.com/giovanniacg/sdd-task-analyzer) (PRs #1 e #2); histórico migrado para este repositório |
+| 3 | CI/CD, Docker, relatório de governança e pitch técnico | PRs #1 a #3 deste repositório |
 
 ## Status do build
 
