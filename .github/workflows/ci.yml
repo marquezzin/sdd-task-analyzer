@@ -1,0 +1,39 @@
+# Motor de Integracao Continua do TaskAnalyzer (Bootcamp III, Fase 3).
+#
+# Gatilho: push ou pull request nas branches main e develop.
+# Ambiente: ubuntu-latest com Python 3.11 (versao minima do CONTEXT_RULES 1.1).
+# Preparacao: instala apenas as dependencias autorizadas em requirements.txt.
+# Execucao: roda o test harness completo em modo verboso; qualquer falha derruba o build.
+
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test harness (pytest, Python 3.11)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout do repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Instalar dependencias autorizadas
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Executar test harness
+        run: pytest tests/test_harness.py -v
