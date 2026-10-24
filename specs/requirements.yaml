@@ -1,6 +1,7 @@
-# Contrato executavel do TaskAnalyzer em formato legivel por maquina.
-# Transposicao fiel de specs/task_analyzer_spec.md (Fase 1, Bootcamp III CEUB EAD).
-# Em caso de divergencia, o documento em Markdown (e o PDF do SDD) prevalece.
+# Contrato do TaskAnalyzer em formato legivel por maquina.
+# Transposicao de specs/task_analyzer_spec.md (Fase 1, Bootcamp III CEUB EAD). O que NAO vem da spec
+# esta marcado: decisoes da Fase 2 (chaves `*_por_decisao_fase_2`) e detalhes de implementacao
+# (`*_na_implementacao`). Em caso de divergencia, o documento em Markdown (e o PDF do SDD) prevalece.
 
 modulo:
   nome: TaskAnalyzer
@@ -89,20 +90,20 @@ regras_de_negocio:
 
 excecoes:
   - nome: TarefaInvalidaError
-    base: ValueError
-    quando:
+    base_na_implementacao: ValueError
+    quando_pela_spec:                       # regra 4
       - "data_conclusao anterior a data_inicio"
       - "status concluida sem data_inicio ou data_conclusao"
+    quando_por_decisao_fase_2:              # a spec descreve a tabela de entradas, mas nao diz o que fazer com violacao
       - "campo obrigatorio ausente"
       - "prioridade ou status fora dos valores aceitos"
       - "titulo vazio"
       - "id_tarefa nao inteiro, nao positivo ou repetido"
     mensagem: "clara, com o id da tarefa e o problema"
   - nome: MetricasIndisponiveisError
-    base: ValueError
-    quando:
-      - "lista vazia"
-      - "nenhuma tarefa com status concluida"
+    base_na_implementacao: ValueError
+    quando_pela_spec:                       # regra 5
+      - "nenhuma tarefa concluida valida na entrada (inclui lista vazia)"
     mensagem: "clara e objetiva ao usuario"
 
 cenarios_de_aceite:

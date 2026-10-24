@@ -42,7 +42,7 @@ Requer Python 3.11+.
 python -m venv venv
 source venv/bin/activate        # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-python -m pytest tests/ -v
+python -m pytest tests/test_harness.py -v
 ```
 
 ## Integração contínua (CI/CD)
